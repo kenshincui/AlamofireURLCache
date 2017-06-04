@@ -8,12 +8,11 @@
 Alamofire network library URLCache-based cache extension
 
 - [Features](#features)
-- [Installation](#Installation)
+- [Installation](#installation)
 - [Usage](#usage)
-    - **Intro -** [Making a Request](#making-a-request), [Response Handling](#response-handling), [Response Validation](#response-validation), [Response Caching](#response-caching)
-	- **HTTP -** [HTTP Methods](#http-methods), [Parameter Encoding](#parameter-encoding), [HTTP Headers](#http-headers), [Authentication](#authentication)
-	- **Large Data -** [Downloading Data to a File](#downloading-data-to-a-file), [Uploading Data to a Server](#uploading-data-to-a-server)
-	- **Tools -** [Statistical Metrics](#statistical-metrics), [cURL Command Output](#curl-command-output)
+    - **[Cache and refresh](#cache-and-refresh)**
+    - **[Ignore server-side cache configuration](ignore-server-side-cache-configuration)**
+    - **[Clear cache](clear-cache)**
 - [License](#license)
 
 ## Features
@@ -24,6 +23,7 @@ Alamofire network library URLCache-based cache extension
 
 
 ## Installation
+
 ### Carthage
 
 To integrate Alamofire into your Xcode project using Carthage, specify it in your Cartfile:
