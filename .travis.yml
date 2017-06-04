@@ -1,0 +1,12 @@
+language: objective-c
+osx_image: xcode8.3
+xcode_project: AlamofireURLCacheDemo.xcodeproj
+xcode_scheme: AlamofireURLCache
+
+branches:
+  only:
+    - master
+
+env:
+  matrix:
+    - TEST_TYPE=iOS
