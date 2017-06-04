@@ -1,4 +1,4 @@
-![AlamofireURLCache](https://raw.githubusercontent.com/KenshinCui/AlamofireURLCache/Resources/cmjLogo120.png)
+![AlamofireURLCache](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/Resources/cmjLogo120.png)
 
 [![Build Status](https://travis-ci.org/kenshincui/AlamofireURLCache.svg?branch=master)](https://travis-ci.org/KenshinCui/AlamofireURLCache)
 [![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
@@ -26,6 +26,6 @@ Alamofire network library URLCache-based cache extension
 
 
 ## License
-AlamofireURL is released under the MIT license. [See LICENSE](https://github.com/KenshinCui/AlamofireURLCache/LICENSE) for details.
+AlamofireURL is released under the MIT license. [See LICENSE](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/LICENSE) for details.
 
 

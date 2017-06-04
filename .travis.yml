@@ -1,7 +1,5 @@
 language: objective-c
 osx_image: xcode8.3
-xcode_project: AlamofireURLCacheDemo.xcodeproj
-xcode_scheme: AlamofireURLCache
 
 branches:
   only:
@@ -10,3 +8,18 @@ branches:
 env:
   matrix:
     - TEST_TYPE=iOS
+
+-before_install:
+ - |
+    gem install xcpretty -N --no-ri --no-rdoc
+script:
+- |
+    if [ "$TEST_TYPE" = iOS ]; then
+      set -o pipefail
+      xcodebuild clean test  -scheme AlamofireURLCacheDemo -destination 'platform=iOS Simulator,name=iPhone 7,OS=10.3' -enableCodeCoverage YES | xcpretty
+    fi
+after_success:
+    - sleep 5
+    - if [ "$TEST_TYPE" = iOS ]; then
+        bash <(curl -s https://codecov.io/bash)
+      fi
