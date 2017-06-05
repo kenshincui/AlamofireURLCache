@@ -11,8 +11,9 @@ Alamofire network library URLCache-based cache extension
 - [Installation](#installation)
 - [Usage](#usage)
     - **[Cache and refresh](#cache-and-refresh)**
-    - **[Ignore server-side cache configuration](ignore-server-side-cache-configuration)**
-    - **[Clear cache](clear-cache)**
+    - **[Ignore server-side cache configuration](#ignore-server-side-cache-configuration)**
+    - **[Clear cache](#clear-cache)**
+- [Blog](#blog)
 - [License](#license)
 
 ## Features
@@ -42,7 +43,7 @@ If you prefer not to use any of the aforementioned dependency managers, you can 
 
 ### Cache and refresh
 
-You can use the *cache()* method provided by AlamofireURLCache for this request cache, and set the request with the *refreshCache* parameter to re-initiate the request to refresh the cache data.
+You can use the *cache()* method to save cache for this request, and set the request with the *refreshCache* parameter to re-initiate the request to refresh the cache data.
 
 ```swift
 Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
@@ -57,7 +58,7 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 
 ### Ignore server-side cache configuration
 
-By default, if the server is configured with cache headers, the server-side configuration is used, but you can ignore this configuration by setting the *ignoreServer* parameter, using the custom cache age。
+By default, if the server is configured with cache headers, the server-side configuration is used, but you can use the custom cache age and ignore this configuration by setting the *ignoreServer* parameter。
 
 ```swift
 Alamofire.request("https://myapi.applinzi.com/url-cache/default-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
@@ -92,7 +93,11 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 > When using AlamofireURLCache, we recommend that you add the *autoClearCache* parameter in any case.
 
 
-## License
-AlamofireURL is released under the MIT license. [See LICENSE](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/LICENSE) for details.
+## Blog
 
+关于AlamofreURLCache实现原理和中文详细介绍可以访问本人博客[Kenshin Cui's Blog](http://www.cnblogs.com/kenshincui/)
+
+## License
+
+AlamofireURL is released under the MIT license. [See LICENSE](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/LICENSE) for details.
 
