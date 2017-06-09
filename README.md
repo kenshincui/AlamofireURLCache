@@ -99,5 +99,5 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 
 ## License
 
-AlamofireURL is released under the MIT license. [See LICENSE](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/LICENSE) for details.
+AlamofireURLCache is released under the MIT license. [See LICENSE](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/LICENSE) for details.
 

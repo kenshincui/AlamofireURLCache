@@ -116,6 +116,9 @@ public extension DataRequest {
     public func cache(maxAge:Int,isPrivate:Bool = false,ignoreServer:Bool = true)
         -> Self
     {
+        if maxAge <= 0 {
+            return self
+        }
         var useServerButRefresh = false
         if let newRequest = self.request {
             if !ignoreServer {
@@ -171,6 +174,9 @@ public extension DataRequest {
                     } else {
                         return
                     }
+                }
+                if newHeaders["Vary"] != nil {
+                    newHeaders.removeObject(forKey: "Vary")
                 }
                 newHeaders[AlamofireURLCache.refreshCacheKey] = AlamofireURLCache.RefreshCacheValue.useCache.rawValue
                 if let newResponse = HTTPURLResponse(url: newURL, statusCode: httpResponse.statusCode, httpVersion: AlamofireURLCache.HTTPVersion, headerFields: newHeaders as? [String : String]) {
