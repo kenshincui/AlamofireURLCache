@@ -160,7 +160,16 @@ public extension DataRequest {
                 guard let newHeaders = (httpResponse.allHeaderFields as NSDictionary).mutableCopy() as? NSMutableDictionary else { return }
                 
                 if AlamofireURLCache.isCanUseCacheControl {
-                    if httpResponse.allHeaderFields["Cache-Control"] == nil || httpResponse.allHeaderFields.keys.contains("no-cache") || httpResponse.allHeaderFields.keys.contains("no-store") || ignoreServer || useServerButRefresh {
+                    if httpResponse.allHeaderFields["Cache-Control"] == nil || (httpResponse.allHeaderFields["Cache-Control"] != nil && ( (httpResponse.allHeaderFields["Cache-Control"] as! String).contains("no-cache")
+                         || (httpResponse.allHeaderFields["Cache-Control"] as! String).contains("no-store"))) || ignoreServer || useServerButRefresh {
+                        if ignoreServer {
+                            if newHeaders["Vary"] != nil { // http 1.1
+                                newHeaders.removeObject(forKey: "Vary")
+                            }
+                            if newHeaders["Pragma"] != nil {
+                                newHeaders.removeObject(forKey: "Pragma")
+                            }
+                        }
                         DataRequest.addCacheControlHeaderField(headers: newHeaders, maxAge: maxAge, isPrivate: isPrivate)
                     } else {
                         return
@@ -168,15 +177,17 @@ public extension DataRequest {
                 } else {
                     if httpResponse.allHeaderFields["Expires"] == nil || ignoreServer || useServerButRefresh {
                         DataRequest.addExpiresHeaderField(headers: newHeaders, maxAge: maxAge)
-                        if ignoreServer && httpResponse.allHeaderFields["Pragma"] != nil {
-                            newHeaders["Pragma"] = "cache"
+                        if ignoreServer {
+                            if httpResponse.allHeaderFields["Pragma"] != nil {
+                                newHeaders["Pragma"] = "cache"
+                            }
+                            if newHeaders["Cache-Control"] != nil {
+                                newHeaders.removeObject(forKey: "Cache-Control")
+                            }
                         }
                     } else {
                         return
                     }
-                }
-                if newHeaders["Vary"] != nil {
-                    newHeaders.removeObject(forKey: "Vary")
                 }
                 newHeaders[AlamofireURLCache.refreshCacheKey] = AlamofireURLCache.RefreshCacheValue.useCache.rawValue
                 if let newResponse = HTTPURLResponse(url: newURL, statusCode: httpResponse.statusCode, httpVersion: AlamofireURLCache.HTTPVersion, headerFields: newHeaders as? [String : String]) {
