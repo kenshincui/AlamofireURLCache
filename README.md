@@ -45,8 +45,23 @@ If you prefer not to use any of the aforementioned dependency managers, you can 
 
 You can use the *cache()* method to save cache for this request, and set the request with the *refreshCache* parameter to re-initiate the request to refresh the cache data.
 
+* Simply cache data
+
 ```swift
-Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
+Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php").responseJSON(completionHandler: { response in
+    if response.value != nil {
+        self.textView.text = (response.value as! [String:Any]).debugDescription
+    } else {
+        self.textView.text = "Error!"
+    }
+    
+}).cache(maxAge: 10)
+```
+
+* Refresh cache
+
+```swift
+Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:true).responseJSON(completionHandler: { response in
     if response.value != nil {
         self.textView.text = (response.value as! [String:Any]).debugDescription
     } else {
