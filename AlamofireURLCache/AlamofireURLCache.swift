@@ -76,6 +76,15 @@ public struct Alamofire {
             self.clearCache(request: httpRequest, urlCache: urlCache)
         }
     }
+    
+    public static func clearCache(url:String,parameters:[String:Any]? = nil, headers:[String:String]? = nil,urlCache:URLCache = URLCache.shared) {
+        if var urlRequest = try? URLRequest(url: url, method: HTTPMethod.get, headers: headers) {
+            urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
+            if let newRequest = try? URLEncoding().encode(urlRequest, with: parameters) {
+                self.clearCache(request: newRequest, urlCache: urlCache)
+            }
+        }
+    }
 }
 
 public extension SessionManager {
