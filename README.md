@@ -13,7 +13,6 @@ Alamofire network library URLCache-based cache extension
     - **[Cache and refresh](#cache-and-refresh)**
     - **[Ignore server-side cache configuration](#ignore-server-side-cache-configuration)**
     - **[Clear cache](#clear-cache)**
-- [Blog](#blog)
 - [License](#license)
 
 ## Features
@@ -106,11 +105,6 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 ```
 
 > When using AlamofireURLCache, we recommend that you add the *autoClearCache* parameter in any case.
-
-
-## Blog
-
-关于AlamofreURLCache实现原理和中文详细介绍可以访问本人博客[Kenshin Cui's Blog](http://www.cnblogs.com/kenshincui/)
 
 ## License
 
