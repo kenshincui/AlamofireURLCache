@@ -1,7 +1,7 @@
 //
 //  ResultTests.swift
 //
-//  Copyright (c) 2014-2016 Alamofire Software Foundation (http://alamofire.org/)
+//  Copyright (c) 2014 Alamofire Software Foundation (http://alamofire.org/)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,7 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.failure(error)
 
         // Then
-        XCTAssertFalse(result.isSuccess, "result is success should be true for failure case")
+        XCTAssertFalse(result.isSuccess, "result is success should be false for failure case")
     }
 
     // MARK: - Is Failure Tests
@@ -90,7 +90,7 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.success("success")
 
         // Then
-        XCTAssertTrue(result.error == nil, "result error should be nil for success case")
+        XCTAssertNil(result.error, "result error should be nil for success case")
     }
 
     func testThatErrorPropertyReturnsErrorForFailureCase() {
@@ -98,7 +98,7 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.failure(error)
 
         // Then
-        XCTAssertTrue(result.error != nil, "result error should not be nil for failure case")
+        XCTAssertNotNil(result.error, "result error should not be nil for failure case")
     }
 
     // MARK: - Description Tests
@@ -152,8 +152,8 @@ class ResultTestCase: BaseTestCase {
         let value = "success value"
 
         // When
-        let result1 = Result(value: { value })  // syntax 1
-        let result2 = Result { value }          // syntax 2
+        let result1 = Result(value: { value })
+        let result2 = Result { value }
 
         // Then
         for result in [result1, result2] {
@@ -167,8 +167,8 @@ class ResultTestCase: BaseTestCase {
         struct ResultError: Error {}
 
         // When
-        let result1 = Result(value: { throw ResultError() })    // syntax 1
-        let result2 = Result { throw ResultError() }            // syntax 2
+        let result1 = Result(value: { throw ResultError() })
+        let result2 = Result { throw ResultError() }
 
         // Then
         for result in [result1, result2] {
@@ -180,11 +180,14 @@ class ResultTestCase: BaseTestCase {
     // MARK: - Unwrap Tests
 
     func testThatUnwrapReturnsSuccessValue() {
-        // Given, When
+        // Given
         let result = Result<String>.success("success value")
 
+        // When
+        let unwrappedValue = try? result.unwrap()
+
         // Then
-        XCTAssertEqual(try result.unwrap(), "success value")
+        XCTAssertEqual(unwrappedValue, "success value")
     }
 
     func testThatUnwrapThrowsFailureError() {
@@ -210,7 +213,11 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.success("success value")
 
         // When
+        #if swift(>=3.2)
+        let mappedResult = result.map { $0.count }
+        #else
         let mappedResult = result.map { $0.characters.count }
+        #endif
 
         // Then
         XCTAssertEqual(mappedResult.value, 13)
@@ -222,7 +229,11 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.failure(ResultError())
 
         // When
+        #if swift(>=3.2)
+        let mappedResult = result.map { $0.count }
+        #else
         let mappedResult = result.map { $0.characters.count }
+        #endif
 
         // Then
         if let error = mappedResult.error {
@@ -239,14 +250,18 @@ class ResultTestCase: BaseTestCase {
         let result = Result<String>.success("success value")
 
         // When
-        let mappedResult = result.flatMap { $0.characters.count }
+        #if swift(>=3.2)
+        let mappedResult = result.map { $0.count }
+        #else
+        let mappedResult = result.map { $0.characters.count }
+        #endif
 
         // Then
         XCTAssertEqual(mappedResult.value, 13)
     }
 
     func testThatFlatMapCatchesTransformationError() {
-        // Given, When
+        // Given
         struct TransformError: Error {}
         let result = Result<String>.success("success value")
 
@@ -262,7 +277,7 @@ class ResultTestCase: BaseTestCase {
     }
 
     func testThatFlatMapPreservesFailureError() {
-        // Given, When
+        // Given
         struct ResultError: Error {}
         struct TransformError: Error {}
         let result = Result<String>.failure(ResultError())
@@ -276,5 +291,207 @@ class ResultTestCase: BaseTestCase {
         } else {
             XCTFail("flatMap should preserve the failure error")
         }
+    }
+
+    // MARK: - Error Mapping Tests
+
+    func testMapErrorTransformsErrorValue() {
+        // Given
+        struct ResultError: Error {}
+        struct OtherError: Error { let error: Error }
+        let result: Result<String> = .failure(ResultError())
+
+        // When
+        let mappedResult = result.mapError { OtherError(error: $0) }
+
+        // Then
+        if let error = mappedResult.error {
+            XCTAssertTrue(error is OtherError)
+        } else {
+            XCTFail("mapError should transform error value")
+        }
+    }
+
+    func testMapErrorPreservesSuccessError() {
+        // Given
+        struct ResultError: Error {}
+        struct OtherError: Error { let error: Error }
+        let result: Result<String> = .success("success")
+
+        // When
+        let mappedResult = result.mapError { OtherError(error: $0) }
+
+        // Then
+        XCTAssertEqual(mappedResult.value, "success")
+    }
+
+    func testFlatMapErrorTransformsErrorValue() {
+        // Given
+        struct ResultError: Error {}
+        struct OtherError: Error { let error: Error }
+        let result: Result<String> = .failure(ResultError())
+
+        // When
+        let mappedResult = result.flatMapError { OtherError(error: $0) }
+
+        // Then
+        if let error = mappedResult.error {
+            XCTAssertTrue(error is OtherError)
+        } else {
+            XCTFail("mapError should transform error value")
+        }
+    }
+
+    func testFlatMapErrorCapturesThrownError() {
+        // Given
+        struct ResultError: Error {}
+        struct OtherError: Error {
+            let error: Error
+            init(error: Error) throws { throw ThrownError() }
+        }
+        struct ThrownError: Error {}
+        let result: Result<String> = .failure(ResultError())
+
+        // When
+        let mappedResult = result.flatMapError { try OtherError(error: $0) }
+
+        // Then
+        if let error = mappedResult.error {
+            XCTAssertTrue(error is ThrownError)
+        } else {
+            XCTFail("mapError should capture thrown error value")
+        }
+    }
+
+    // MARK: - With Value or Error Tests
+
+    func testWithValueExecutesWhenSuccess() {
+        // Given
+        let result: Result<String> = .success("success")
+        var string = "failure"
+
+        // When
+        result.withValue { string = $0 }
+
+        // Then
+        XCTAssertEqual(string, "success")
+    }
+
+    func testWithValueDoesNotExecutesWhenFailure() {
+        // Given
+        struct ResultError: Error {}
+        let result: Result<String> = .failure(ResultError())
+        var string = "failure"
+
+        // When
+        result.withValue { string = $0 }
+
+        // Then
+        XCTAssertEqual(string, "failure")
+    }
+
+    func testWithErrorExecutesWhenFailure() {
+        // Given
+        struct ResultError: Error {}
+        let result: Result<String> = .failure(ResultError())
+        var string = "success"
+
+        // When
+        result.withError { string = "\(type(of: $0))" }
+
+        // Then
+    #if swift(>=4.0)
+        XCTAssertEqual(string, "ResultError")
+    #elseif swift(>=3.2)
+        XCTAssertEqual(string, "ResultError #1")
+    #else
+        XCTAssertEqual(string, "(ResultError #1)")
+    #endif
+    }
+
+    func testWithErrorDoesNotExecuteWhenSuccess() {
+        // Given
+        let result: Result<String> = .success("success")
+        var string = "success"
+
+        // When
+        result.withError { string = "\(type(of: $0))" }
+
+        // Then
+        XCTAssertEqual(string, "success")
+    }
+
+    // MARK: - If Success or Failure Tests
+
+    func testIfSuccessExecutesWhenSuccess() {
+        // Given
+        let result: Result<String> = .success("success")
+        var string = "failure"
+
+        // When
+        result.ifSuccess { string = "success" }
+
+        // Then
+        XCTAssertEqual(string, "success")
+    }
+
+    func testIfSuccessDoesNotExecutesWhenFailure() {
+        // Given
+        struct ResultError: Error {}
+        let result: Result<String> = .failure(ResultError())
+        var string = "failure"
+
+        // When
+        result.ifSuccess { string = "success" }
+
+        // Then
+        XCTAssertEqual(string, "failure")
+    }
+
+    func testIfFailureExecutesWhenFailure() {
+        // Given
+        struct ResultError: Error {}
+        let result: Result<String> = .failure(ResultError())
+        var string = "success"
+
+        // When
+        result.ifFailure { string = "failure" }
+
+        // Then
+        XCTAssertEqual(string, "failure")
+    }
+
+    func testIfFailureDoesNotExecuteWhenSuccess() {
+        // Given
+        let result: Result<String> = .success("success")
+        var string = "success"
+
+        // When
+        result.ifFailure { string = "failure" }
+
+        // Then
+        XCTAssertEqual(string, "success")
+    }
+
+    // MARK: - Functional Chaining Tests
+
+    func testFunctionalMethodsCanBeChained() {
+        // Given
+        struct ResultError: Error {}
+        let result: Result<String> = .success("first")
+        var string = "first"
+        var success = false
+
+        // When
+        let endResult = result
+            .map { _ in "second" }
+            .flatMap { _ in "third" }
+            .withValue { if $0 == "third" { string = "fourth" } }
+            .ifSuccess { success = true }
+
+        // Then
+        XCTAssertEqual(endResult.value, "third")
+        XCTAssertEqual(string, "fourth")
+        XCTAssertTrue(success)
     }
 }

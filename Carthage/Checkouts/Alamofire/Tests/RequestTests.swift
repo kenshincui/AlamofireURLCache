@@ -1,7 +1,7 @@
 //
 //  RequestTests.swift
 //
-//  Copyright (c) 2014-2016 Alamofire Software Foundation (http://alamofire.org/)
+//  Copyright (c) 2014 Alamofire Software Foundation (http://alamofire.org/)
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -382,7 +382,7 @@ class RequestResponseTestCase: BaseTestCase {
 // MARK: -
 
 extension Request {
-    fileprivate func preValidate(operation: @escaping (Void) -> Void) -> Self {
+    fileprivate func preValidate(operation: @escaping () -> Void) -> Self {
         delegate.queue.addOperation {
             operation()
         }
@@ -390,7 +390,7 @@ extension Request {
         return self
     }
 
-    fileprivate func postValidate(operation: @escaping (Void) -> Void) -> Self {
+    fileprivate func postValidate(operation: @escaping () -> Void) -> Self {
         delegate.queue.addOperation {
             operation()
         }
@@ -524,9 +524,21 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         let components = cURLCommandComponents(for: request)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertFalse(components.contains("-X"))
         XCTAssertEqual(components.last, "\"\(urlString)\"")
+    }
+
+    func testGETRequestWithJSONHeaderDebugDescription() {
+        // Given
+        let urlString = "https://httpbin.org/get"
+
+        // When
+        let headers: [String: String] = [ "X-Custom-Header": "{\"key\": \"value\"}" ]
+        let request = manager.request(urlString, headers: headers)
+
+        // Then
+        XCTAssertNotNil(request.debugDescription.range(of: "-H \"X-Custom-Header: {\\\"key\\\": \\\"value\\\"}\""))
     }
 
     func testGETRequestWithDuplicateHeadersDebugDescription() {
@@ -539,7 +551,7 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         let components = cURLCommandComponents(for: request)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertFalse(components.contains("-X"))
         XCTAssertEqual(components.last, "\"\(urlString)\"")
 
@@ -558,7 +570,7 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         let components = cURLCommandComponents(for: request)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertEqual(components[3..<5], ["-X", "POST"])
         XCTAssertEqual(components.last, "\"\(urlString)\"")
     }
@@ -578,7 +590,7 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         let components = cURLCommandComponents(for: request)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertEqual(components[3..<5], ["-X", "POST"])
 
         XCTAssertNotNil(request.debugDescription.range(of: "-H \"Content-Type: application/json\""))
@@ -609,7 +621,7 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         let components = cURLCommandComponents(for: request)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertEqual(components[3..<5], ["-X", "POST"])
         XCTAssertEqual(components.last, "\"\(urlString)\"")
         XCTAssertEqual(components[5..<6], ["-b"])
@@ -671,7 +683,7 @@ class RequestDebugDescriptionTestCase: BaseTestCase {
         debugPrint(request!)
 
         // Then
-        XCTAssertEqual(components[0..<3], ["$", "curl", "-i"])
+        XCTAssertEqual(components[0..<3], ["$", "curl", "-v"])
         XCTAssertTrue(components.contains("-X"))
         XCTAssertEqual(components.last, "\"\(urlString)\"")
 
