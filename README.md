@@ -28,8 +28,16 @@ Alamofire network library URLCache-based cache extension
 
 To integrate Alamofire into your Xcode project using Carthage, specify it in your Cartfile:
 
+#### Swift 4 or Swift 5 (Alamofire version is 4.x)
+
 ```
-github "kenshincui/AlamofireURLCache" 
+github "kenshincui/AlamofireURLCache"
+```
+
+#### Swift 3 (Alamofire version is 3.x)
+
+```
+github "kenshincui/AlamofireURLCache" == 0.1
 ```
 
 Run carthage update to build the framework and drag the built AlamofireURLCache.framework into your Xcode project.
