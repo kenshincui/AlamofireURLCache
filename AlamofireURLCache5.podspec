@@ -7,7 +7,7 @@
 #
 
 Pod::Spec.new do |s|
-    s.name             = 'AlamofireURLCache'
+    s.name             = 'AlamofireURLCache5'
     s.version          = '0.5.0'
     s.summary          = 'Alamofire network library URLCache-based cache extension'
     s.description      = <<-DESC

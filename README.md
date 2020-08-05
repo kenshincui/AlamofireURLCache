@@ -31,7 +31,7 @@ To integrate AlamofireURLCache into your Xcode project using Cocoapods, specify 
 #### Swift 5 (Alamofire version is 5.x)
 
 ```
-pod 'AlamofireURLCache','~> 0.5.0'
+pod 'AlamofireURLCache5'
 ```
 
 > Note that the current Cocoapods integration only supports the latest version of Swit5.x (corresponding to the Alamofire 5.x version), if you use Swift4.x or use Alamofire4.x, please use Carthage integration
@@ -132,6 +132,10 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 ```
 
 > When using AlamofireURLCache, we recommend that you add the *autoClearCache* parameter in any case.
+
+### In Swift 3 ~ Swift 4
+
+If you are using Swift3 or Swift4, the code in the above demo only needs to modify `AF` to `Alamofire`.
 
 ## License
 
