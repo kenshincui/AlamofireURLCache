@@ -1,6 +1,7 @@
 ![AlamofireURLCache](https://raw.githubusercontent.com/kenshincui/AlamofireURLCache/master/Resources/AlamofireURLCache_Logo.png)
 
 [![Build Status](https://travis-ci.org/kenshincui/AlamofireURLCache.svg?branch=master)](https://travis-ci.org/KenshinCui/AlamofireURLCache)
+[![pod v5.2](https://img.shields.io/badge/pod-v5.2-4BC51D.svg?style=flat)](https://github.com/CocoaPods/CocoaPods)
 [![Carthage Compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Weibo](https://img.shields.io/badge/Weibo-%40KenshinCui-yellow.svg?style=flat)](https://m.weibo.cn/p/1005051869326357)
 ![](https://img.shields.io/github/license/mashape/apistatus.svg)
@@ -74,7 +75,7 @@ You can use the *cache()* method to save cache for this request, and set the req
 * Simply cache data
 
 ```swift
-Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php").responseJSON(completionHandler: { response in
+AF.request("https://myapi.applinzi.com/url-cache/no-cache.php").responseJSON(completionHandler: { response in
     if response.value != nil {
         self.textView.text = (response.value as! [String:Any]).debugDescription
     } else {
@@ -87,7 +88,7 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php").responseJ
 * Refresh cache
 
 ```swift
-Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:true).responseJSON(completionHandler: { response in
+AF.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:true).responseJSON(completionHandler: { response in
     if response.value != nil {
         self.textView.text = (response.value as! [String:Any]).debugDescription
     } else {
@@ -102,7 +103,7 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCac
 By default, if the server is configured with cache headers, the server-side configuration is used, but you can use the custom cache age and ignore this configuration by setting the *ignoreServer* parameter。
 
 ```swift
-Alamofire.request("https://myapi.applinzi.com/url-cache/default-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
+AF.request("https://myapi.applinzi.com/url-cache/default-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
     if response.value != nil {
         self.textView.text = (response.value as! [String:Any]).debugDescription
     } else {
@@ -117,11 +118,11 @@ Alamofire.request("https://myapi.applinzi.com/url-cache/default-cache.php",refre
 Sometimes you need to clean the cache manually rather than refresh the cache data, then you can use AlamofireURLCache cache cache API. But for network requests error, serialization error, etc. we recommend the use of *autoClearCache* parameters Automatically ignores the wrong cache data.
 
 ```swift
-Alamofire.clearCache(dataRequest: dataRequest) // clear cache by DataRequest
-Alamofire.clearCache(request: urlRequest) // clear cache by URLRequest
+AF.clearCache(dataRequest: dataRequest) // clear cache by DataRequest
+AF.clearCache(request: urlRequest) // clear cache by URLRequest
 
 // ignore data cache when request error
-Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
+AF.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
     if response.value != nil {
         self.textView.text = (response.value as! [String:Any]).debugDescription
     } else {
