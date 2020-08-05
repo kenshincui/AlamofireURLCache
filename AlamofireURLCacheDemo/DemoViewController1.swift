@@ -28,13 +28,14 @@ class DemoViewController1: UIViewController {
     }
     
     private func loadData(isRefresh:Bool) {
-        self.dataRequest = Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:isRefresh).responseJSON(completionHandler: { response in
+        LoadingHUD.showLoading(in: self)
+        self.dataRequest = AF.request("https://urlcachetest.herokuapp.com/no-cache.php",refreshCache:isRefresh).responseJSON(completionHandler: { response in
             if response.value != nil {
                 self.textView.text = (response.value as! [String:Any]).debugDescription
             } else {
                 self.textView.text = "Error!"
             }
-            
+            LoadingHUD.hide()
         }).cache(maxAge: 10)
     }
     

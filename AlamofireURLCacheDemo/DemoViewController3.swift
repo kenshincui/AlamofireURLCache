@@ -21,7 +21,7 @@ class DemoViewController3: UIViewController {
 
     @IBAction func clearCache() {
         if let dataRequest = self.dataRequest {
-            Alamofire.clearCache(dataRequest: dataRequest)
+            AF.clearCache(dataRequest: dataRequest)
         }
         self.loadData(autoClear: false)
     }
@@ -31,13 +31,14 @@ class DemoViewController3: UIViewController {
     }
     
     private func loadData(autoClear:Bool) {
-        self.dataRequest = Alamofire.request("https://myapi.applinzi.com/url-cache/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
+        LoadingHUD.showLoading(in: self)
+        self.dataRequest = AF.request("https://urlcachetest.herokuapp.com/no-cache.php",refreshCache:false).responseJSON(completionHandler: { response in
             if response.value != nil {
                 self.textView.text = (response.value as! [String:Any]).debugDescription
             } else {
                 self.textView.text = "Error!"
             }
-            
+            LoadingHUD.hide()
         },autoClearCache:autoClear).cache(maxAge: 10)
     }
     

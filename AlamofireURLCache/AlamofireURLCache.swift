@@ -19,6 +19,11 @@ public struct AlamofireURLCache {
         }
     }
     
+    
+    /// If you customize the urlcache of urlsessionconfiguration, please set this property
+    /// Default value is AF.session.configuration.urlCache == URLCache.shared
+    public static var urlCache = AF.session.configuration.urlCache ?? URLCache.shared
+    
     fileprivate static var isCanUseCacheControl = true
     
     fileprivate enum RefreshCacheValue:String {
@@ -29,28 +34,8 @@ public struct AlamofireURLCache {
     fileprivate static let frameworkName = "AlamofireURLCache"
 }
 
-public struct Alamofire {
-    @discardableResult
-    public static func request(
-        _ url: URLConvertible,
-        method: HTTPMethod = .get,
-        parameters: Parameters? = nil,
-        encoding: ParameterEncoding = URLEncoding.default,
-        headers: HTTPHeaders? = nil,
-        refreshCache:Bool = false)
-        -> DataRequest
-    {
-        return SessionManager.default.request(
-            url,
-            method: method,
-            parameters: parameters,
-            encoding: encoding,
-            headers: headers,
-            refreshCache: refreshCache
-        )
-    }
-    
-    public static func clearCache(request:URLRequest,urlCache:URLCache = URLCache.shared) {
+extension Session {
+    public func clearCache(request:URLRequest,urlCache:URLCache = AlamofireURLCache.urlCache) {
         if let cachedResponse = urlCache.cachedResponse(for: request) {
             if let httpResponse = cachedResponse.response as? HTTPURLResponse {
                 let newData = cachedResponse.data
@@ -71,14 +56,15 @@ public struct Alamofire {
         }
     }
     
-    public static func clearCache(dataRequest:DataRequest,urlCache:URLCache = URLCache.shared) {
+    public func clearCache(dataRequest:DataRequest,urlCache:URLCache = AlamofireURLCache.urlCache) {
         if let httpRequest = dataRequest.request {
             self.clearCache(request: httpRequest, urlCache: urlCache)
         }
     }
     
-    public static func clearCache(url:String,parameters:[String:Any]? = nil, headers:[String:String]? = nil,urlCache:URLCache = URLCache.shared) {
-        if var urlRequest = try? URLRequest(url: url, method: HTTPMethod.get, headers: headers) {
+    public func clearCache(url:String,parameters:[String:Any]? = nil, headers:[String:String]? = nil,urlCache:URLCache = AlamofireURLCache.urlCache) {
+        let httpHeaders = headers == nil ? nil : HTTPHeaders(headers!)
+        if var urlRequest = try? URLRequest(url: url, method: HTTPMethod.get, headers: httpHeaders) {
             urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
             if let newRequest = try? URLEncoding().encode(urlRequest, with: parameters) {
                 self.clearCache(request: newRequest, urlCache: urlCache)
@@ -87,18 +73,16 @@ public struct Alamofire {
     }
 }
 
-public extension SessionManager {
-
+extension Session {
     @discardableResult
-    public func request(
-        _ url: URLConvertible,
-        method: HTTPMethod = .get,
-        parameters: Parameters? = nil,
-        encoding: ParameterEncoding = URLEncoding.default,
-        headers: HTTPHeaders? = nil,
-        refreshCache:Bool = false)
-        -> DataRequest
-    {
+    open func request(_ convertible: URLConvertible,
+                        method: HTTPMethod = .get,
+                        parameters: Parameters? = nil,
+                        encoding: ParameterEncoding = URLEncoding.default,
+                        headers: HTTPHeaders? = nil,
+                        interceptor: RequestInterceptor? = nil,
+                        requestModifier: RequestModifier? = nil,
+                        refreshCache:Bool = false) -> DataRequest {
         var newHeaders = headers
         if method == .get {
             if refreshCache {
@@ -114,11 +98,11 @@ public extension SessionManager {
                 
             }
         }
-        return request(url, method: method, parameters: parameters, encoding: encoding, headers: newHeaders)
+        return request(convertible, method: method, parameters: parameters, encoding: encoding, headers: newHeaders, interceptor: interceptor, requestModifier: requestModifier)
     }
 }
 
-public extension DataRequest {
+extension DataRequest {
     
     // MARK: - Public method
     @discardableResult
@@ -137,18 +121,17 @@ public extension DataRequest {
             }
             
             if newRequest.allHTTPHeaderFields?[AlamofireURLCache.refreshCacheKey] != AlamofireURLCache.RefreshCacheValue.refreshCache.rawValue {
-                if let urlCache = self.session.configuration.urlCache {
-                    if let value = (urlCache.cachedResponse(for: newRequest)?.response as? HTTPURLResponse)?.allHeaderFields[AlamofireURLCache.refreshCacheKey] as? String {
-                        if value == AlamofireURLCache.RefreshCacheValue.useCache.rawValue {
-                            return self
-                        }
+                let urlCache = AlamofireURLCache.urlCache
+                if let value = (urlCache.cachedResponse(for: newRequest)?.response as? HTTPURLResponse)?.allHeaderFields[AlamofireURLCache.refreshCacheKey] as? String {
+                    if value == AlamofireURLCache.RefreshCacheValue.useCache.rawValue {
+                        return self
                     }
                 }
             }
-            
         }
         
-        return response { [unowned self](defaultResponse) in
+        // add to response queue wait for invoke
+        return response { (defaultResponse) in
             
             if defaultResponse.request?.httpMethod != "GET" {
                 debugPrint("Non-GET requests do not support caching!")
@@ -165,9 +148,8 @@ public extension DataRequest {
                 guard let newRequest = defaultResponse.request else { return }
                 guard let newData = defaultResponse.data else { return }
                 guard let newURL = httpResponse.url else { return }
-                guard let urlCache = self.session.configuration.urlCache else { return }
                 guard let newHeaders = (httpResponse.allHeaderFields as NSDictionary).mutableCopy() as? NSMutableDictionary else { return }
-                
+                let urlCache = AlamofireURLCache.urlCache
                 if AlamofireURLCache.isCanUseCacheControl {
                     if httpResponse.allHeaderFields["Cache-Control"] == nil || (httpResponse.allHeaderFields["Cache-Control"] != nil && ( (httpResponse.allHeaderFields["Cache-Control"] as! String).contains("no-cache")
                          || (httpResponse.allHeaderFields["Cache-Control"] as! String).contains("no-store"))) || ignoreServer || useServerButRefresh {
@@ -212,71 +194,66 @@ public extension DataRequest {
     }
     
     @discardableResult
-    public func response<T: DataResponseSerializerProtocol>(
-        queue: DispatchQueue? = nil,
-        responseSerializer: T,
-        completionHandler: @escaping (DataResponse<T.SerializedObject>) -> Void,
-        autoClearCache:Bool)
-        -> Self
-    {
-        let myCompleteHandler:((DataResponse<T.SerializedObject>) ->Void) = {
+    public func response<Serializer: DataResponseSerializerProtocol>(queue: DispatchQueue = .main,
+                                                                     responseSerializer: Serializer,
+                                                                     completionHandler: @escaping (AFDataResponse<Serializer.SerializedObject>) -> Void,
+                                                                     autoClearCache:Bool) -> Self  {
+        let myCompleteHandler:((AFDataResponse<Serializer.SerializedObject>) -> Void) = {
             dataResponse in
             if dataResponse.error != nil && autoClearCache {
                 if let request = dataResponse.request {
-                    Alamofire.clearCache(request: request)
+                    AF.clearCache(request: request)
                 }
             }
             completionHandler(dataResponse)
         }
-       
-        return response(queue: queue, responseSerializer:responseSerializer ,completionHandler: myCompleteHandler)
-    }
-
-    @discardableResult
-    public func responseData(
-        queue: DispatchQueue? = nil,
-        completionHandler: @escaping (DataResponse<Data>) -> Void,
-        autoClearCache:Bool)
-        -> Self
-    {
-        return response(
-            queue: queue,
-            responseSerializer: DataRequest.dataResponseSerializer(),
-            completionHandler: completionHandler,
-            autoClearCache:autoClearCache
-        )
+        return response(queue: queue, responseSerializer: responseSerializer, completionHandler: myCompleteHandler)
     }
     
     @discardableResult
-    public func responseString(
-        queue: DispatchQueue? = nil,
-        encoding: String.Encoding? = nil,
-        completionHandler: @escaping (DataResponse<String>) -> Void,
-        autoClearCache:Bool)
-        -> Self
-    {
-        return response(
-            queue: queue,
-            responseSerializer: DataRequest.stringResponseSerializer(encoding: encoding),
-            completionHandler: completionHandler,
-            autoClearCache:autoClearCache
-        )
+    public func responseData(queue: DispatchQueue = .main,
+                             dataPreprocessor: DataPreprocessor = DataResponseSerializer.defaultDataPreprocessor,
+                             emptyResponseCodes: Set<Int> = DataResponseSerializer.defaultEmptyResponseCodes,
+                             emptyRequestMethods: Set<HTTPMethod> = DataResponseSerializer.defaultEmptyRequestMethods,
+                             completionHandler: @escaping (AFDataResponse<Data>) -> Void,
+                             autoClearCache:Bool) -> Self {
+        response(queue: queue,
+                 responseSerializer: DataResponseSerializer(dataPreprocessor: dataPreprocessor,
+                                                            emptyResponseCodes: emptyResponseCodes,
+                                                            emptyRequestMethods: emptyRequestMethods),
+                 completionHandler: completionHandler, autoClearCache: autoClearCache)
     }
     
     @discardableResult
-    public func responseJSON(
-        queue: DispatchQueue? = nil,
-        options: JSONSerialization.ReadingOptions = .allowFragments,
-        completionHandler: @escaping (DataResponse<Any>) -> Void,
-        autoClearCache:Bool)
-        -> Self
-    {
-        return response(
-            queue: queue,
-            responseSerializer: DataRequest.jsonResponseSerializer(options: options),
-            completionHandler: completionHandler,
-            autoClearCache:autoClearCache
-        )
+    public func responseString(queue: DispatchQueue = .main,
+                               dataPreprocessor: DataPreprocessor = StringResponseSerializer.defaultDataPreprocessor,
+                               encoding: String.Encoding? = nil,
+                               emptyResponseCodes: Set<Int> = StringResponseSerializer.defaultEmptyResponseCodes,
+                               emptyRequestMethods: Set<HTTPMethod> = StringResponseSerializer.defaultEmptyRequestMethods,
+                               completionHandler: @escaping (AFDataResponse<String>) -> Void,
+                               autoClearCache:Bool) -> Self {
+        response(queue: queue,
+                 responseSerializer: StringResponseSerializer(dataPreprocessor: dataPreprocessor,
+                                                              encoding: encoding,
+                                                              emptyResponseCodes: emptyResponseCodes,
+                                                              emptyRequestMethods: emptyRequestMethods),
+                 completionHandler: completionHandler, autoClearCache: autoClearCache)
+    }
+    
+    @discardableResult
+    public func responseJSON(queue: DispatchQueue = .main,
+                             dataPreprocessor: DataPreprocessor = JSONResponseSerializer.defaultDataPreprocessor,
+                             emptyResponseCodes: Set<Int> = JSONResponseSerializer.defaultEmptyResponseCodes,
+                             emptyRequestMethods: Set<HTTPMethod> = JSONResponseSerializer.defaultEmptyRequestMethods,
+                             options: JSONSerialization.ReadingOptions = .allowFragments,
+                             completionHandler: @escaping (AFDataResponse<Any>) -> Void,
+                             autoClearCache:Bool) -> Self {
+        response(queue: queue,
+                 responseSerializer: JSONResponseSerializer(dataPreprocessor: dataPreprocessor,
+                                                            emptyResponseCodes: emptyResponseCodes,
+                                                            emptyRequestMethods: emptyRequestMethods,
+                                                            options: options),
+                 completionHandler: completionHandler, autoClearCache: autoClearCache)
     }
     
     // MARK: - Private method

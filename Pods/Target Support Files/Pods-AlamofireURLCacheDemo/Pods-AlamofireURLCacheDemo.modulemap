@@ -1,0 +1,6 @@
+framework module Pods_AlamofireURLCacheDemo {
+  umbrella header "Pods-AlamofireURLCacheDemo-umbrella.h"
+
+  export *
+  module * { export * }
+}
