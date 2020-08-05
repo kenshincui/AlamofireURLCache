@@ -24,14 +24,33 @@ Alamofire network library URLCache-based cache extension
 
 ## Installation
 
+### Cocoapods
+
+To integrate AlamofireURLCache into your Xcode project using Cocoapods, specify it in your Podfile:
+
+#### Swift 5 (Alamofire version is 5.x)
+
+```
+pod 'AlamofireURLCache','~> 0.5.0'
+```
+
+> Note that the current Cocoapods integration only supports the latest version of Swit5.x (corresponding to the Alamofire 5.x version), if you use Swift4.x or use Alamofire4.x, please use Carthage integration
+
 ### Carthage
 
-To integrate Alamofire into your Xcode project using Carthage, specify it in your Cartfile:
+To integrate AlamofireURLCache into your Xcode project using Carthage, specify it in your Cartfile:
+
+#### Swift 5 (Alamofire version is 5.x)
+
+```
+github "kenshincui/AlamofireURLCache"
+```
+
 
 #### Swift 4 or Swift 5 (Alamofire version is 4.x)
 
 ```
-github "kenshincui/AlamofireURLCache"
+github "kenshincui/AlamofireURLCache" == 0.4
 ```
 
 #### Swift 3 (Alamofire version is 3.x)
