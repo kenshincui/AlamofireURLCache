@@ -62,6 +62,28 @@ github "kenshincui/AlamofireURLCache" == 0.1
 
 Run carthage update to build the framework and drag the built AlamofireURLCache.framework into your Xcode project.
 
+### Swift Package Manager
+
+The [Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler. 
+
+Once you have your Swift package set up, adding AlamofireURLCache5 as a dependency is as easy as adding it to the `dependencies` value of your `Package.swift`.
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/HarshitDaftary/AlamofireURLCache.git", .upToNextMajor(from: "0.5.1"))
+]
+```
+
+### Swift Package on Xcode
+
+You can simply add this library to your Xcode project, Go to `File` > `Swift Packages` > `Add Package Dependency`.
+
+Enter following URL in search box
+```
+https://github.com/HarshitDaftary/AlamofireURLCache.git
+```
+Click `Next` to get library to your code.
+
 ### Manually
 
 If you prefer not to use any of the aforementioned dependency managers, you can integrate AlamofireURLCache into your project manually(Only need to copy AlamofireURLCache.swift to you project).
